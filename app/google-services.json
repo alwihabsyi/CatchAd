@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1060979343486",
+    "project_id": "bleexplore",
+    "storage_bucket": "bleexplore.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060979343486:android:0a61f3fac2f2687141982f",
+        "android_client_info": {
+          "package_name": "com.catchad.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDekgzg0hZjr6zB0dJIWIrVtkV2QwmAzz4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

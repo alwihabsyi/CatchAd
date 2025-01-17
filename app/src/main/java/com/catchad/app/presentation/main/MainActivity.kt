@@ -73,16 +73,16 @@ class MainActivity : AppCompatActivity() {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         setContentView(binding.root)
 
+        registerBleReceiver()
+        setDeviceRv()
+
         if (!hasPermissions()) {
             requestPermissionsLauncher.launch(permissions)
             return
-        }
+        } else startBleService()
 
-        registerBleReceiver()
-        setDeviceRv()
 //        setActions()
 //        setRecyclerView()
-        startBleService()
 //        observeContent()
 
     }

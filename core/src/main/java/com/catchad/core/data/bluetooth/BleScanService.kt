@@ -1,5 +1,6 @@
 package com.catchad.core.data.bluetooth
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -29,7 +30,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-class BleScanService: Service() {
+class BleScanService : Service() {
     private lateinit var rxBleClient: RxBleClient
     private var scanDisposable: Disposable? = null
     private lateinit var firestore: FirebaseFirestore
@@ -43,7 +44,6 @@ class BleScanService: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startBleScan()
         return START_STICKY
     }
 
@@ -71,9 +71,12 @@ class BleScanService: Service() {
         startForeground(notificationId, notification)
     }
 
+    @SuppressLint("MissingPermission")
     private fun startBleScan() {
         val devicesMap = mutableMapOf<String, BluetoothDeviceData>()
-        val scanSettings = ScanSettings.Builder().build()
+        val scanSettings = ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .build()
 
         scanDisposable = rxBleClient.scanBleDevices(scanSettings, ScanFilter.empty())
             .subscribe({ scanResult ->
@@ -101,9 +104,7 @@ class BleScanService: Service() {
             while (isActive) {
                 delay(1000)
                 val strongestDevice = devicesMap.values.maxByOrNull { it.rssi }
-                strongestDevice?.let {
-                    checkFirestoreForDevice(it)
-                }
+                strongestDevice?.let { checkFirestoreForDevice(it) }
                 devicesMap.clear()
             }
         }
@@ -129,7 +130,10 @@ class BleScanService: Service() {
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val intent = Intent().apply {
-            setClassName(this@BleScanService, "com.blecatch.app.presentation.webview.WebViewActivity")
+            setClassName(
+                this@BleScanService,
+                "com.blecatch.app.presentation.webview.WebViewActivity"
+            )
             putExtra("contentUrl", content.contentUrl)
         }
 
@@ -175,6 +179,7 @@ class BleScanService: Service() {
                     dao.insert(items)
                     sendNotification(items)
                 }
+
                 existingItem == null -> {
                     dao.insert(items)
                     sendNotification(items)

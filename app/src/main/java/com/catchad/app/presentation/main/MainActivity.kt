@@ -16,6 +16,7 @@ import com.catchad.app.databinding.ActivityMainBinding
 import com.catchad.app.presentation.webview.WebViewActivity
 import com.catchad.app.util.hide
 import com.catchad.app.util.permissions
+import com.catchad.app.util.show
 import com.catchad.core.data.bluetooth.BleScanService
 import com.catchad.core.ui.NotificationAdapter
 import kotlinx.coroutines.flow.collectLatest
@@ -115,7 +116,7 @@ class MainActivity : AppCompatActivity() {
                 if (contents.isNotEmpty()) {
                     binding.tvNoContent.hide()
                     notificationAdapter.differ.submitList(contents)
-                }
+                } else binding.tvNoContent.show()
             }
         }
     }

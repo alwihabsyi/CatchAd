@@ -94,6 +94,8 @@ class BleScanService : Service() {
                             devicesMap[name] = currentDevice
                         }
                     }
+
+                    sendDeviceListToMainActivity(devicesMap.values.toList())
                 }
             }, {
                 stopSelf()
@@ -108,6 +110,12 @@ class BleScanService : Service() {
                 devicesMap.clear()
             }
         }
+    }
+
+    private fun sendDeviceListToMainActivity(devices: List<BluetoothDeviceData>) {
+        val intent = Intent("com.catchad.core.BLUETOOTH_DEVICES_DETECTED")
+        intent.putParcelableArrayListExtra("devices", ArrayList(devices))
+        sendBroadcast(intent)
     }
 
     private fun checkFirestoreForDevice(device: BluetoothDeviceData) {
@@ -130,10 +138,7 @@ class BleScanService : Service() {
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val intent = Intent().apply {
-            setClassName(
-                this@BleScanService,
-                "com.blecatch.app.presentation.webview.WebViewActivity"
-            )
+            setClassName(this@BleScanService, "com.blecatch.app.presentation.webview.WebViewActivity")
             putExtra("contentUrl", content.contentUrl)
         }
 

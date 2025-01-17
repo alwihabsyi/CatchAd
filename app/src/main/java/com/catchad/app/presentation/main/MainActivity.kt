@@ -1,9 +1,14 @@
 package com.catchad.app.presentation.main
 
+import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -18,17 +23,21 @@ import com.catchad.app.util.hide
 import com.catchad.app.util.permissions
 import com.catchad.app.util.show
 import com.catchad.core.data.bluetooth.BleScanService
+import com.catchad.core.domain.model.BluetoothDeviceData
+import com.catchad.core.ui.DeviceListAdapter
 import com.catchad.core.ui.NotificationAdapter
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
 
     private var _binding: ActivityMainBinding? = null
     private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModel()
     private val notificationAdapter by lazy { NotificationAdapter() }
+    private val deviceListAdapter by lazy { DeviceListAdapter() }
     private val requestPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -43,8 +52,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         startBleService()
-        setRecyclerView()
-        observeContent()
+//        setRecyclerView()
+//        observeContent()
+    }
+
+    private var oldList = mutableListOf<BluetoothDeviceData>()
+    private val deviceReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val devices = intent?.getParcelableArrayListExtra<BluetoothDeviceData>("devices")
+            devices?.takeIf { it != oldList }?.let {
+                deviceListAdapter.submitList(it)
+                oldList = it
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,10 +78,26 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        setActions()
-        setRecyclerView()
+        registerBleReceiver()
+        setDeviceRv()
+//        setActions()
+//        setRecyclerView()
         startBleService()
-        observeContent()
+//        observeContent()
+
+    }
+
+    private fun setDeviceRv() {
+        binding.rvDevice.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = deviceListAdapter
+        }
+    }
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private fun registerBleReceiver() {
+        val filter = IntentFilter("com.catchad.core.BLUETOOTH_DEVICES_DETECTED")
+        registerReceiver(deviceReceiver, filter)
     }
 
     private fun setActions() {

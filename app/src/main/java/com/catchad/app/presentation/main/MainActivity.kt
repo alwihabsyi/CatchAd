@@ -97,7 +97,12 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun registerBleReceiver() {
         val filter = IntentFilter("com.catchad.core.BLUETOOTH_DEVICES_DETECTED")
-        registerReceiver(deviceReceiver, filter)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) registerReceiver(
+            deviceReceiver,
+            filter,
+            Context.RECEIVER_NOT_EXPORTED
+        )
+        else registerReceiver(deviceReceiver, filter)
     }
 
     private fun setActions() {

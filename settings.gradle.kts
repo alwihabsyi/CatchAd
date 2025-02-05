@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BLEExplore"
+rootProject.name = "CatchAd"
 include(":app")
 include(":core")

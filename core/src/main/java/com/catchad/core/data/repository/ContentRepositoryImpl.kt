@@ -1,6 +1,6 @@
 package com.catchad.core.data.repository
 
-import com.catchad.core.data.local.RoomDataSource
+import com.catchad.core.data.local.room.RoomDataSource
 import com.catchad.core.data.mapper.ContentMapper
 import com.catchad.core.domain.model.Content
 import com.catchad.core.domain.repository.ContentRepository

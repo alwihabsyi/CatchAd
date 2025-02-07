@@ -1,6 +1,6 @@
-package com.catchad.core.data.local
+package com.catchad.core.data.local.room
 
-import com.catchad.core.data.local.dao.ContentDao
+import com.catchad.core.data.local.room.dao.ContentDao
 
 class RoomDataSource(
     private val contentDao: ContentDao

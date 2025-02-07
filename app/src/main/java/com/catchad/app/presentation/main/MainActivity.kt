@@ -8,36 +8,29 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.catchad.app.databinding.ActivityMainBinding
-import com.catchad.app.presentation.webview.WebViewActivity
-import com.catchad.app.util.hide
 import com.catchad.app.util.permissions
-import com.catchad.app.util.show
 import com.catchad.core.data.bluetooth.BleScanService
 import com.catchad.core.domain.model.BluetoothDeviceData
+import com.catchad.core.domain.model.WifiDeviceData
 import com.catchad.core.ui.DeviceListAdapter
-import com.catchad.core.ui.NotificationAdapter
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import com.catchad.core.ui.WifiDeviceListAdapter
 
 @Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
 
     private var _binding: ActivityMainBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: MainViewModel by viewModel()
-    private val notificationAdapter by lazy { NotificationAdapter() }
     private val deviceListAdapter by lazy { DeviceListAdapter() }
+    private val wifiDeviceListAdapter by lazy { WifiDeviceListAdapter() }
     private val requestPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -52,18 +45,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         startBleService()
-//        setRecyclerView()
-//        observeContent()
     }
 
-    private var oldList = mutableListOf<BluetoothDeviceData>()
     private val deviceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            val devices = intent?.getParcelableArrayListExtra<BluetoothDeviceData>("devices")
-            devices?.takeIf { it != oldList }?.let {
-                deviceListAdapter.submitList(it)
-                oldList = it
-            }
+            intent?.getParcelableArrayListExtra<Parcelable>("devices")?.takeIf { it.isNotEmpty() }
+                ?.let { devices ->
+                    when (devices.firstOrNull()) {
+                        is BluetoothDeviceData -> {
+                            deviceListAdapter.differ.submitList(
+                                devices.filterIsInstance<BluetoothDeviceData>()
+                                    .sortedByDescending { it.rssi })
+                        }
+
+                        is WifiDeviceData -> {
+                            wifiDeviceListAdapter.differ.submitList(
+                                devices.filterIsInstance<WifiDeviceData>()
+                                    .sortedByDescending { it.rssi })
+                        }
+
+                        else -> Log.e("DeviceReceiver", "Received unknown device type")
+                    }
+                }
         }
     }
 
@@ -73,21 +76,21 @@ class MainActivity : AppCompatActivity() {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         setContentView(binding.root)
 
-        registerBleReceiver()
         setDeviceRv()
+        registerReceiver()
 
         if (!hasPermissions()) {
             requestPermissionsLauncher.launch(permissions)
             return
         } else startBleService()
-
-//        setActions()
-//        setRecyclerView()
-//        observeContent()
-
     }
 
     private fun setDeviceRv() {
+        binding.rvWifiDevices.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = wifiDeviceListAdapter
+        }
+
         binding.rvDevice.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = deviceListAdapter
@@ -95,51 +98,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun registerBleReceiver() {
-        val filter = IntentFilter("com.catchad.core.BLUETOOTH_DEVICES_DETECTED")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) registerReceiver(
+    private fun registerReceiver() {
+        val filter = IntentFilter("com.catchad.core.DEVICES_DETECTED")
+        if (Build.VERSION.SDK_INT >= 34) registerReceiver(
             deviceReceiver,
             filter,
-            Context.RECEIVER_NOT_EXPORTED
+            Context.RECEIVER_EXPORTED
         )
         else registerReceiver(deviceReceiver, filter)
-    }
-
-    private fun setActions() {
-        binding.apply {
-            btnDelete.setOnClickListener {
-                val builder = AlertDialog.Builder(this@MainActivity)
-                builder.setTitle("Delete All")
-                builder.setMessage("Are you sure you want to delete all notifications?")
-
-                builder.setPositiveButton("Yes") { dialog, _ ->
-                    viewModel.deleteNotifications()
-                    notificationAdapter.differ.submitList(emptyList())
-                    dialog.dismiss()
-                }
-
-                builder.setNegativeButton("No") { dialog, _ ->
-                    dialog.dismiss()
-                }
-
-                val dialog: AlertDialog = builder.create()
-                dialog.show()
-            }
-        }
-    }
-
-    private fun setRecyclerView() {
-        binding.rvContent.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = notificationAdapter
-        }
-        notificationAdapter.onItemClick = {
-            startActivity(
-                Intent(this@MainActivity, WebViewActivity::class.java).apply {
-                    putExtra("contentUrl", it.contentUrl)
-                }
-            )
-        }
     }
 
     private fun startBleService() {
@@ -148,17 +114,6 @@ class MainActivity : AppCompatActivity() {
             startForegroundService(intent)
         } else {
             startService(intent)
-        }
-    }
-
-    private fun observeContent() {
-        lifecycleScope.launch {
-            viewModel.getAllContent().collectLatest { contents ->
-                if (contents.isNotEmpty()) {
-                    binding.tvNoContent.hide()
-                    notificationAdapter.differ.submitList(contents)
-                } else binding.tvNoContent.show()
-            }
         }
     }
 

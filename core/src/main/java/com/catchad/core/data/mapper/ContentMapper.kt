@@ -1,6 +1,6 @@
 package com.catchad.core.data.mapper
 
-import com.catchad.core.data.local.entity.ContentEntity
+import com.catchad.core.data.local.room.entity.ContentEntity
 import com.catchad.core.domain.model.Content
 import com.catchad.core.util.toDateString
 import kotlinx.coroutines.flow.Flow

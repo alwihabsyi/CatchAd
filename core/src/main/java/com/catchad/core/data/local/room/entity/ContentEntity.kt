@@ -1,4 +1,4 @@
-package com.catchad.core.data.local.entity
+package com.catchad.core.data.local.room.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

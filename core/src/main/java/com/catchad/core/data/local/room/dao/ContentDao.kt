@@ -1,10 +1,10 @@
-package com.catchad.core.data.local.dao
+package com.catchad.core.data.local.room.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.catchad.core.data.local.entity.ContentEntity
+import com.catchad.core.data.local.room.entity.ContentEntity
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 

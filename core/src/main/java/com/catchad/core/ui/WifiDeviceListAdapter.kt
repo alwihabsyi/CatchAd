@@ -7,16 +7,16 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.catchad.core.databinding.ItemDeviceBinding
-import com.catchad.core.domain.model.BluetoothDeviceData
+import com.catchad.core.domain.model.WifiDeviceData
 
-class DeviceListAdapter : RecyclerView.Adapter<DeviceListAdapter.DeviceViewHolder>() {
+class WifiDeviceListAdapter : RecyclerView.Adapter<WifiDeviceListAdapter.DeviceViewHolder>() {
 
-    private val diffUtil = object : DiffUtil.ItemCallback<BluetoothDeviceData>() {
-        override fun areItemsTheSame(oldItem: BluetoothDeviceData, newItem: BluetoothDeviceData): Boolean {
-            return oldItem.id == newItem.id
+    private val diffUtil = object: DiffUtil.ItemCallback<WifiDeviceData>() {
+        override fun areItemsTheSame(oldItem: WifiDeviceData, newItem: WifiDeviceData): Boolean {
+            return oldItem.bssid.trim() == newItem.bssid.trim()
         }
 
-        override fun areContentsTheSame(oldItem: BluetoothDeviceData, newItem: BluetoothDeviceData): Boolean {
+        override fun areContentsTheSame(oldItem: WifiDeviceData, newItem: WifiDeviceData): Boolean {
             return oldItem == newItem
         }
     }
@@ -37,9 +37,9 @@ class DeviceListAdapter : RecyclerView.Adapter<DeviceListAdapter.DeviceViewHolde
 
     inner class DeviceViewHolder(private val binding: ItemDeviceBinding) : RecyclerView.ViewHolder(binding.root) {
         @SuppressLint("SetTextI18n")
-        fun bind(device: BluetoothDeviceData) {
-            binding.deviceName.text = "Name: ${device.name}"
-            binding.deviceAddress.text = "Address: ${device.address}"
+        fun bind(device: WifiDeviceData) {
+            binding.deviceName.text = "SSID: ${device.ssid}"
+            binding.deviceAddress.text = "BSSID: ${device.bssid}"
         }
     }
 }

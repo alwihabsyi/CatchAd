@@ -18,15 +18,20 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"https://cf06-103-123-98-100.ngrok-free.app/api/\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+//            buildConfigField("String", "BASE_URL", "\"https://53fc-103-123-98-100.ngrok-free.app/api/\"")
         }
     }
     buildFeatures {
+        buildConfig = true
         viewBinding = true
     }
     compileOptions {
@@ -68,4 +73,18 @@ dependencies {
 
     // Worker
     implementation(libs.androidx.work.runtime.ktx)
+
+    // Retrofit & OkHttp
+    implementation(libs.retrofit)
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
+
+    // Moshi
+    implementation(libs.converter.moshi)
+    implementation(libs.moshi.kotlin)
+    implementation(libs.moshi.adapters)
+
+    // DataStore
+    api(libs.androidx.datastore.preferences)
 }

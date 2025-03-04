@@ -65,5 +65,11 @@ class DeviceRepositoryImpl(
         }
     }
 
+    override fun getRssiLimit(): Flow<String?> =
+        dataStore.getRssiLimit()
+
+    override suspend fun setRssiLimit(limit: String) =
+        dataStore.setRssiLimit(limit)
+
     override fun getRegistered(): Flow<Boolean> = dataStore.getRegistered()
 }

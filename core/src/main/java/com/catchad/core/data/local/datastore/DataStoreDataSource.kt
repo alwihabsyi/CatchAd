@@ -14,8 +14,13 @@ class DataStoreDataSource(
 
     fun getRegistered() = preference.getBoolean(REGISTERED)
 
+    suspend fun setRssiLimit(limit: String) = preference.setString(RSSI_LIMIT, limit)
+
+    fun getRssiLimit() = preference.getString(RSSI_LIMIT)
+
     companion object {
         val REGISTERED = booleanPreferencesKey("registered")
         val DEVICE_ID = stringPreferencesKey("device_id")
+        val RSSI_LIMIT = stringPreferencesKey("rssi_limit")
     }
 }

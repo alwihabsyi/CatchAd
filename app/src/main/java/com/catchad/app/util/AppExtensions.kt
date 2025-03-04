@@ -1,9 +1,13 @@
+@file:Suppress("DEPRECATION")
+
 package com.catchad.app.util
 
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.view.View
 import android.widget.ImageView
@@ -81,4 +85,10 @@ fun Activity.alertDialog(onYesClicked: () -> Unit) {
 
 fun Int.dpToPx(context: Context): Int {
     return (this * context.resources.displayMetrics.density).toInt()
+}
+
+fun Activity.allowScanning(): Boolean {
+    val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    return bluetoothAdapter?.isEnabled == true && wifiManager.isWifiEnabled
 }

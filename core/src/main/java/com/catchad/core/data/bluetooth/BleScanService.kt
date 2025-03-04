@@ -25,6 +25,8 @@ import com.polidea.rxandroidble2.scan.ScanSettings
 import io.reactivex.disposables.Disposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
@@ -35,12 +37,17 @@ import org.koin.android.ext.android.inject
 
 @Suppress("DEPRECATION")
 class BleScanService : Service() {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val deviceRepository: DeviceRepository by inject()
+
+    private var checkRssiJob: Job? = null
+    private var checkRegisterJob: Job? = null
 
     private lateinit var rxBleClient: RxBleClient
     private lateinit var firestore: FirebaseFirestore
     private var scanDisposable: Disposable? = null
     private val senderMutex = Mutex()
+    private var rssiLimit = -60
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
@@ -51,14 +58,24 @@ class BleScanService : Service() {
         rxBleClient = RxBleClient.create(this)
         firestore = FirebaseFirestore.getInstance()
         checkRegister()
+        checkRssiLimit()
         startForegroundService()
         startBleScan()
         startWifiScan()
     }
 
-    private fun checkRegister() = CoroutineScope(Dispatchers.IO).launch {
-        if(!deviceRepository.getRegistered().first()) {
-            deviceRepository.registerDevice()
+    private fun checkRssiLimit() {
+        if (checkRssiJob?.isActive == true) return
+        checkRssiJob = scope.launch {
+            rssiLimit = deviceRepository.getRssiLimit().first { it != null }?.toInt() ?: -60
+        }
+    }
+
+    private fun checkRegister() {
+        if (checkRegisterJob?.isActive == true) return
+        checkRegisterJob = scope.launch {
+            val unRegistered = deviceRepository.getRegistered().first { !it }
+            if (unRegistered) deviceRepository.registerDevice()
         }
     }
 
@@ -67,12 +84,12 @@ class BleScanService : Service() {
         val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val scannedWifiMap = mutableMapOf<String, WifiDeviceData>()
 
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             while (isActive) {
                 wifiManager.startScan()
                 val results = wifiManager.scanResults
 
-                results.filter { it.level > -70 }.forEach { scanResult ->
+                results.filter { it.level > rssiLimit }.forEach { scanResult ->
                     val wifiDevice = WifiDeviceData(
                         id = scanResult.SSID,
                         ssid = scanResult.SSID,
@@ -124,7 +141,7 @@ class BleScanService : Service() {
 
         scanDisposable =
             rxBleClient.scanBleDevices(scanSettings, ScanFilter.empty()).subscribe({ scanResult ->
-                if (scanResult.rssi > -70) {
+                if (scanResult.rssi > rssiLimit) {
                     scanResult.bleDevice.name?.let { name ->
                         val currentDevice = BluetoothDeviceData(
                             id = name,
@@ -148,7 +165,7 @@ class BleScanService : Service() {
                 it.printStackTrace()
             })
 
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             while (isActive) {
                 sendDeviceListToMainActivity(devicesMap.values.toList().ifEmpty { listOf(EmptyData("Bluetooth")) })
                 devicesMap.clear()
@@ -164,7 +181,7 @@ class BleScanService : Service() {
             sendBroadcast(intent)
         }
 
-    private fun publishData(data: Parcelable) = CoroutineScope(Dispatchers.IO).launch {
+    private fun publishData(data: Parcelable) = scope.launch {
         deviceRepository.publishDevice(data)
     }
 

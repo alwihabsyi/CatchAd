@@ -9,4 +9,6 @@ interface DeviceRepository {
     fun getRegistered(): Flow<Boolean>
     suspend fun registerDevice()
     suspend fun publishDevice(device: Parcelable)
+    fun getRssiLimit(): Flow<String?>
+    suspend fun setRssiLimit(limit: String)
 }

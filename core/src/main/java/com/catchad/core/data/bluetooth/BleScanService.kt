@@ -13,7 +13,9 @@ import android.os.IBinder
 import android.os.Parcelable
 import androidx.core.app.NotificationCompat
 import com.catchad.core.R
+import com.catchad.core.domain.constant.Constants.ACKNOWLEDGED_DEVICES
 import com.catchad.core.domain.model.BluetoothDeviceData
+import com.catchad.core.domain.model.EmptyData
 import com.catchad.core.domain.model.WifiDeviceData
 import com.catchad.core.domain.repository.DeviceRepository
 import com.google.firebase.firestore.FirebaseFirestore
@@ -85,7 +87,8 @@ class BleScanService : Service() {
                     }
                 }
 
-                sendDeviceListToMainActivity(scannedWifiMap.values.toList())
+                sendDeviceListToMainActivity(scannedWifiMap.values.toList().ifEmpty { listOf(EmptyData("Wifi")) })
+                scannedWifiMap.clear()
                 delay(WIFI_SCAN_DELAY)
             }
         }
@@ -129,22 +132,29 @@ class BleScanService : Service() {
                             address = scanResult.bleDevice.macAddress,
                             manufacturerData = "Unknown",
                             rssi = scanResult.rssi
-                        )
-                        val existingDevice = devicesMap[name]
-                        if (existingDevice == null || scanResult.rssi > existingDevice.rssi) {
-                            devicesMap[name] = currentDevice
-                            publishData(currentDevice)
-                        }
-                    }
+                        ).takeIf { name in ACKNOWLEDGED_DEVICES.map { it.first } }
 
-                    CoroutineScope(Dispatchers.IO).launch {
-                        sendDeviceListToMainActivity(devicesMap.values.toList())
+                        currentDevice?.let {
+                            val existingDevice = devicesMap[name]
+                            if (existingDevice == null || scanResult.rssi > existingDevice.rssi) {
+                                devicesMap[name] = currentDevice
+                                publishData(currentDevice)
+                            }
+                        }
                     }
                 }
             }, {
                 stopSelf()
                 it.printStackTrace()
             })
+
+        CoroutineScope(Dispatchers.IO).launch {
+            while (isActive) {
+                sendDeviceListToMainActivity(devicesMap.values.toList().ifEmpty { listOf(EmptyData("Bluetooth")) })
+                devicesMap.clear()
+                delay(BLUETOOTH_SCAN_DELAY)
+            }
+        }
     }
 
     private suspend fun sendDeviceListToMainActivity(devices: List<Parcelable>) =
@@ -168,6 +178,7 @@ class BleScanService : Service() {
     }
 
     companion object {
-        const val WIFI_SCAN_DELAY = 2000L
+        const val WIFI_SCAN_DELAY = 3000L
+        const val BLUETOOTH_SCAN_DELAY = 3000L
     }
 }

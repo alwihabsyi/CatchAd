@@ -1,12 +1,14 @@
 package com.catchad.core.ui
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.catchad.core.databinding.ItemDeviceBinding
+import com.catchad.core.domain.constant.Constants.ACKNOWLEDGED_DEVICES
 import com.catchad.core.domain.model.BluetoothDeviceData
 
 class DeviceListAdapter : RecyclerView.Adapter<DeviceListAdapter.DeviceViewHolder>() {
@@ -37,9 +39,18 @@ class DeviceListAdapter : RecyclerView.Adapter<DeviceListAdapter.DeviceViewHolde
 
     inner class DeviceViewHolder(private val binding: ItemDeviceBinding) : RecyclerView.ViewHolder(binding.root) {
         @SuppressLint("SetTextI18n")
-        fun bind(device: BluetoothDeviceData) {
-            binding.deviceName.text = "Name: ${device.name}"
-            binding.deviceAddress.text = "Address: ${device.address}"
+        fun bind(device: BluetoothDeviceData) = binding.apply {
+            deviceName.text = "Name: ${device.name}"
+            deviceAddress.text = "Address: ${device.address}"
+            signalStrength.text = "Signal Strength (rssi): ${device.rssi}"
+
+            val backgroundColor = ACKNOWLEDGED_DEVICES.find { it.first == device.name }?.second
+            backgroundColor?.let {
+                root.setCardBackgroundColor(it)
+                deviceName.setTextColor(Color.WHITE)
+                deviceAddress.setTextColor(Color.WHITE)
+                signalStrength.setTextColor(Color.WHITE)
+            }
         }
     }
 }

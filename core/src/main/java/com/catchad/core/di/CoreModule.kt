@@ -11,6 +11,7 @@ import com.catchad.core.data.remote.ApiResponseAdapter
 import com.catchad.core.data.remote.ApiService
 import com.catchad.core.data.repository.ContentRepositoryImpl
 import com.catchad.core.data.repository.DeviceRepositoryImpl
+import com.catchad.core.domain.helpers.ConnectivityHelper
 import com.catchad.core.domain.helpers.DeviceInfoHelper
 import com.catchad.core.domain.repository.ContentRepository
 import com.catchad.core.domain.repository.DeviceRepository
@@ -35,6 +36,7 @@ val dataModule = module {
 
 val helperModule = module {
     single { DeviceInfoHelper() }
+    single { ConnectivityHelper(androidContext()) }
 }
 
 val repositoryModule = module {

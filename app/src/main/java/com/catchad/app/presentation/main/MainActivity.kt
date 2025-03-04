@@ -19,10 +19,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.catchad.app.databinding.ActivityMainBinding
 import com.catchad.app.util.permissions
 import com.catchad.core.data.bluetooth.BleScanService
+import com.catchad.core.domain.helpers.ConnectivityHelper
 import com.catchad.core.domain.model.BluetoothDeviceData
+import com.catchad.core.domain.model.EmptyData
 import com.catchad.core.domain.model.WifiDeviceData
 import com.catchad.core.ui.DeviceListAdapter
 import com.catchad.core.ui.WifiDeviceListAdapter
+import org.koin.android.ext.android.inject
 
 @Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
@@ -31,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private val binding get() = _binding!!
     private val deviceListAdapter by lazy { DeviceListAdapter() }
     private val wifiDeviceListAdapter by lazy { WifiDeviceListAdapter() }
+    private val connectivityHelper: ConnectivityHelper by inject()
     private val requestPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -49,24 +53,28 @@ class MainActivity : AppCompatActivity() {
 
     private val deviceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            intent?.getParcelableArrayListExtra<Parcelable>("devices")?.takeIf { it.isNotEmpty() }
-                ?.let { devices ->
-                    when (devices.firstOrNull()) {
-                        is BluetoothDeviceData -> {
-                            deviceListAdapter.differ.submitList(
-                                devices.filterIsInstance<BluetoothDeviceData>()
-                                    .sortedByDescending { it.rssi })
-                        }
-
-                        is WifiDeviceData -> {
-                            wifiDeviceListAdapter.differ.submitList(
-                                devices.filterIsInstance<WifiDeviceData>()
-                                    .sortedByDescending { it.rssi })
-                        }
-
-                        else -> Log.e("DeviceReceiver", "Received unknown device type")
+            intent?.getParcelableArrayListExtra<Parcelable>("devices")?.let { devices ->
+                when (val d = devices.firstOrNull()) {
+                    is BluetoothDeviceData -> {
+                        deviceListAdapter.differ.submitList(
+                            devices.filterIsInstance<BluetoothDeviceData>()
+                                .sortedByDescending { it.rssi })
                     }
+
+                    is WifiDeviceData -> {
+                        wifiDeviceListAdapter.differ.submitList(
+                            devices.filterIsInstance<WifiDeviceData>()
+                                .sortedByDescending { it.rssi })
+                    }
+
+                    is EmptyData -> {
+                        if (d.type == "Wifi") wifiDeviceListAdapter.differ.submitList(emptyList())
+                        else deviceListAdapter.differ.submitList(emptyList())
+                    }
+
+                    else -> Log.e("DeviceReceiver", "Received unknown device type")
                 }
+            }
         }
     }
 
@@ -83,6 +91,8 @@ class MainActivity : AppCompatActivity() {
             requestPermissionsLauncher.launch(permissions)
             return
         } else startBleService()
+
+//        connectivityHelper.connectToSSID("Hpmerah", "12345678")
     }
 
     private fun setDeviceRv() {

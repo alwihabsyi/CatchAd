@@ -22,7 +22,7 @@
             android:id="@+id/deviceName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Device Name"
+            android:text="@string/device_name"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -30,7 +30,13 @@
             android:id="@+id/deviceAddress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Device Address" />
+            android:text="@string/device_address" />
+
+        <TextView
+            android:id="@+id/signalStrength"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/signal_strength" />
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>

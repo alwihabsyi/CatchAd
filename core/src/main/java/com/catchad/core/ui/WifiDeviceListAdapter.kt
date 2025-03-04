@@ -40,6 +40,7 @@ class WifiDeviceListAdapter : RecyclerView.Adapter<WifiDeviceListAdapter.DeviceV
         fun bind(device: WifiDeviceData) {
             binding.deviceName.text = "SSID: ${device.ssid}"
             binding.deviceAddress.text = "BSSID: ${device.bssid}"
+            binding.signalStrength.text = "Signal Strength (rssi): ${device.rssi}"
         }
     }
 }

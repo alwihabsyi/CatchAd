@@ -11,7 +11,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 23
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -19,7 +19,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"https://cf06-103-123-98-100.ngrok-free.app/api/\"")
+            buildConfigField("String", "BASE_URL", "\"https://0e22-103-123-98-100.ngrok-free.app/api/\"")
         }
         release {
             isMinifyEnabled = false

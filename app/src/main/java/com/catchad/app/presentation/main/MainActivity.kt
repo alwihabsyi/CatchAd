@@ -67,11 +67,11 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     private val stateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                BluetoothAdapter.ACTION_STATE_CHANGED, WifiManager.WIFI_STATE_CHANGED_ACTION -> {
+                BluetoothAdapter.ACTION_STATE_CHANGED -> {
                     if (allowScanning()) {
                         startBleService()
                     } else {
-                        toast("Bluetooth or wifi is off, make sure it's on to proceed scanning")
+                        toast("Bluetooth is off, make sure it's on to proceed scanning")
                     }
                 }
             }

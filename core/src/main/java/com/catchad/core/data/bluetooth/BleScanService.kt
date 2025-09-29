@@ -74,8 +74,8 @@ class BleScanService : Service() {
     private fun checkRegister() {
         if (checkRegisterJob?.isActive == true) return
         checkRegisterJob = scope.launch {
-            val unRegistered = deviceRepository.getRegistered().first { !it }
-            if (unRegistered) deviceRepository.registerDevice()
+            val registered = deviceRepository.getRegistered().first()
+            if (!registered) deviceRepository.registerDevice()
         }
     }
 

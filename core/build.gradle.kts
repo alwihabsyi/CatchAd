@@ -19,7 +19,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"https://0e22-103-123-98-100.ngrok-free.app/api/\"")
+            buildConfigField("String", "BASE_URL", "\"https://transmitter.inovasi.top/api/\"")
         }
         release {
             isMinifyEnabled = false
@@ -27,7 +27,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-//            buildConfigField("String", "BASE_URL", "\"https://53fc-103-123-98-100.ngrok-free.app/api/\"")
+            buildConfigField("String", "BASE_URL", "\"https://transmitter.inovasi.top/api/\"")
         }
     }
     buildFeatures {
